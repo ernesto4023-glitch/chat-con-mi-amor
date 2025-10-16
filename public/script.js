@@ -6,6 +6,7 @@ const passInput = document.getElementById("password");
 const nameInput = document.getElementById("name");
 const emailInput = document.getElementById("email");
 const joinBtn = document.getElementById("joinBtn");
+const exitBtn = document.getElementById("exitBtn");
 
 const messages = document.getElementById("messages");
 const typingEl = document.getElementById("typing");
@@ -16,7 +17,24 @@ const notifySound = document.getElementById("notifySound");
 let room, name, email;
 let typingTimeout;
 
-// Entrar a la sala
+// 🔁 Restaurar sesión si existe
+const saved = sessionStorage.getItem("chatData");
+if (saved) {
+  const data = JSON.parse(saved);
+  ({ room, name, email } = data);
+  socket.emit("join", data);
+}
+
+// 🚪 Salir
+exitBtn.addEventListener("click", () => {
+  sessionStorage.removeItem("chatData");
+  chatSection.classList.add("hidden");
+  joinSection.classList.remove("hidden");
+  socket.disconnect();
+  location.reload();
+});
+
+// 🎟️ Entrar a sala
 joinBtn.addEventListener("click", () => {
   room = roomInput.value.trim();
   name = nameInput.value.trim();
@@ -24,17 +42,15 @@ joinBtn.addEventListener("click", () => {
   const password = passInput.value.trim();
 
   if (!room || !name || !email || !password) {
-    alert("Por favor completa todos los campos 💫");
+    alert("Completa todos los campos 💫");
     return;
   }
 
-  socket.emit("join", { room, password, email, name });
+  const data = { room, password, name, email };
+  sessionStorage.setItem("chatData", JSON.stringify(data));
+  socket.emit("join", data);
 });
 
-// Recibir error de contraseña
-socket.on("errorMsg", (msg) => alert(msg));
-
-// Una vez dentro
 socket.on("history", (history) => {
   joinSection.classList.add("hidden");
   chatSection.classList.remove("hidden");
@@ -42,32 +58,24 @@ socket.on("history", (history) => {
   history.forEach(appendMessage);
 });
 
-// Mensajes nuevos
 socket.on("chat message", (msg) => {
   appendMessage(msg);
   if (msg.email !== email) notifySound.play();
 });
 
-// Mensajes del sistema
-socket.on("system", ({ text, time }) => {
+socket.on("system", ({ text }) => {
   const sys = document.createElement("div");
   sys.className = "message other";
   sys.style.textAlign = "center";
   sys.style.background = "transparent";
-  sys.textContent = `${text}`;
-  messages.appendChild(div);
+  sys.textContent = text;
+  messages.appendChild(sys);
   messages.scrollTop = messages.scrollHeight;
 });
 
-// Indicador de escritura
-socket.on("typing", (who) => {
-  typingEl.textContent = `${who} está escribiendo...`;
-});
-socket.on("stop typing", () => {
-  typingEl.textContent = "";
-});
+socket.on("typing", (who) => (typingEl.textContent = `${who} está escribiendo...`));
+socket.on("stop typing", () => (typingEl.textContent = ""));
 
-// Enviar mensaje
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   const text = messageInput.value.trim();
@@ -77,7 +85,6 @@ form.addEventListener("submit", (e) => {
   socket.emit("stop typing", room);
 });
 
-// Detectar escritura
 messageInput.addEventListener("input", () => {
   socket.emit("typing", room);
   clearTimeout(typingTimeout);

@@ -8,21 +8,18 @@
 </head>
 <body>
   <div class="chat-container">
-    <!-- Encabezado fijo -->
     <div class="header">
       <h2>💞 Chat de Amor 💞</h2>
     </div>
 
-    <!-- Sección para unirse a la sala -->
     <div class="join-section" id="joinSection">
       <input id="room" type="text" placeholder="Código de sala (ej: amor123)" />
-      <input id="password" type="password" placeholder="Contraseña de la sala 💫" />
+      <input id="password" type="password" placeholder="Contraseña 💫" />
       <input id="name" type="text" placeholder="Tu nombre" />
       <input id="email" type="email" placeholder="Tu correo" />
       <button id="joinBtn">Entrar</button>
     </div>
 
-    <!-- Sección del chat -->
     <div class="chat-section hidden" id="chatSection">
       <div class="messages" id="messages"></div>
       <div id="typing"></div>
@@ -30,14 +27,13 @@
       <form id="form" class="input-area" autocomplete="off">
         <input id="text" type="text" placeholder="Escribe un mensaje..." />
         <button type="submit" id="sendBtn">Enviar 💌</button>
+        <button type="button" id="exitBtn" class="exit">Salir 🚪</button>
       </form>
     </div>
   </div>
 
-  <!-- 🔔 Sonido de notificación -->
   <audio id="notifySound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_8c09b2a056.mp3?filename=message-notification-6901.mp3"></audio>
 
-  <!-- Socket.io y script -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="script.js"></script>
 </body>

@@ -150,3 +150,7 @@ body {
 .hidden {
   display: none;
 }
+
+.exit {
+  background: #999 !important;
+}
