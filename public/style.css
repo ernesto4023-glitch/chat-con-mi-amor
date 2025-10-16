@@ -121,7 +121,6 @@ body {
   padding: 0.5rem;
   display: flex;
   gap: 0.4rem;
-  align-items: center;
 }
 
 .input-area input {
@@ -141,6 +140,9 @@ body {
   cursor: pointer;
   font-weight: 600;
   transition: transform 0.2s;
+  width: 40%;
+  text-align: center;
+
 }
 
 .input-area button:hover {
