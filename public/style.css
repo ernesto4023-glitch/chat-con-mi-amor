@@ -140,7 +140,6 @@ body {
   cursor: pointer;
   font-weight: 600;
   transition: transform 0.2s;
-  width: 40%;
   text-align: center;
 
 }
@@ -168,5 +167,8 @@ body {
     .boton{
         display: flex;
         justify-content: space-evenly;
+    }
+    .input-area button{
+        width: 40%;
     }
 }
