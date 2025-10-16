@@ -55,7 +55,7 @@ socket.on("system", ({ text, time }) => {
   sys.style.textAlign = "center";
   sys.style.background = "transparent";
   sys.textContent = `${text}`;
-  messages.appendChild(sys);
+  messages.appendChild(div);
   messages.scrollTop = messages.scrollHeight;
 });
 
