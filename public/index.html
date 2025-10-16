@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💞 Chat Privado</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="chat-container">
+    <div class="header">
+      <h2>💞 Chat de Amor 💞</h2>
+    </div>
+
+    <div class="join-section" id="joinSection">
+      <input id="room" type="text" placeholder="Código de sala (ej: amor123)" />
+      <input id="password" type="password" placeholder="Contraseña de la sala 💫" />
+      <input id="name" type="text" placeholder="Tu nombre" />
+      <input id="email" type="email" placeholder="Tu correo" />
+      <button id="joinBtn">Entrar</button>
+    </div>
+
+    <div class="chat-section hidden" id="chatSection">
+      <div class="messages" id="messages"></div>
+      <div id="typing"></div>
+      <form id="form" class="input-area" autocomplete="off">
+        <input id="text" type="text" placeholder="Escribe un mensaje..." />
+        <button type="submit" id="sendBtn">Enviar 💌</button>
+      </form>
+    </div>
+  </div>
+
+  <audio id="notifySound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_8c09b2a056.mp3?filename=message-notification-6901.mp3"></audio>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
