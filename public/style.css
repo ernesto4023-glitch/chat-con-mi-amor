@@ -156,3 +156,17 @@ body {
 .exit {
   background: #999 !important;
 }
+
+@media (max-width:768px){
+    h2{
+        font-size: 24px;
+    }
+    .input-area{
+        display: flex;
+        flex-direction: column;
+    }
+    .boton{
+        display: flex;
+        justify-content: space-evenly;
+    }
+}
