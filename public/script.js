@@ -58,9 +58,27 @@ socket.on("history", (history) => {
   history.forEach(appendMessage);
 });
 
+// 📩 Recibir mensajes y mostrar notificación
 socket.on("chat message", (msg) => {
   appendMessage(msg);
-  if (msg.email !== email) notifySound.play();
+
+  if (msg.email !== email) {
+    // 🔊 Reproducir sonido
+    notifySound.play();
+
+    // 🔔 Mostrar notificación del sistema
+    if (Notification.permission === "granted") {
+      const notification = new Notification(`💌 Nuevo mensaje de ${msg.name}`, {
+        body: msg.text,
+        icon: "/icon-192.png" // asegúrate de tener este ícono en tu carpeta public/
+      });
+
+      // Si el usuario hace clic en la notificación, enfoca el chat
+      notification.onclick = () => {
+        window.focus();
+      };
+    }
+  }
 });
 
 socket.on("system", ({ text }) => {
@@ -99,3 +117,62 @@ function appendMessage(msg) {
   messages.appendChild(div);
   messages.scrollTop = messages.scrollHeight;
 }
+
+// 🧩 Registrar el Service Worker y pedir permiso de notificación
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js")
+    .then(() => console.log("✅ Service Worker registrado"))
+    .catch(err => console.error("❌ Error al registrar SW:", err));
+}
+
+// 🔔 Pedir permiso para notificaciones al cargar
+if ("Notification" in window) {
+  Notification.requestPermission().then(permission => {
+    if (permission === "granted") {
+      console.log("🔔 Permiso de notificaciones concedido");
+    } else {
+      console.warn("🚫 Notificaciones bloqueadas");
+    }
+  });
+}
+
+// 📲 Mostrar botón "Instalar App" cuando esté disponible
+let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  // Crear el botón
+  const btn = document.createElement("button");
+  btn.textContent = "📲 Instalar App";
+  btn.classList.add("install-btn");
+
+  // Opcional: estiliza el botón
+  btn.style.position = "fixed";
+  btn.style.bottom = "20px";
+  btn.style.right = "20px";
+  btn.style.padding = "10px 15px";
+  btn.style.background = "#ff4081";
+  btn.style.color = "#fff";
+  btn.style.border = "none";
+  btn.style.borderRadius = "10px";
+  btn.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+  btn.style.cursor = "pointer";
+  btn.style.fontSize = "16px";
+  btn.style.zIndex = "1000";
+
+  document.body.appendChild(btn);
+
+  // Evento de instalación
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`🧩 Resultado de instalación: ${outcome}`);
+    deferredPrompt = null;
+    btn.remove();
+  });
+});
+
+
