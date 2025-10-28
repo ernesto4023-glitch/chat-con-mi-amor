@@ -65,23 +65,6 @@ socket.on("history", (history) => {
   chatSection.classList.remove("hidden");
   messages.innerHTML = "";
   history.forEach(appendMessage);
-
-  // 🚨 Agregar botones de llamada solo una vez
-  if (!document.getElementById("voiceCallBtn")) {
-    const callButtons = document.createElement("div");
-    callButtons.style.display = "flex";
-    callButtons.style.justifyContent = "center";
-    callButtons.style.gap = "10px";
-    callButtons.style.margin = "10px 0";
-    callButtons.innerHTML = `
-      <button id="voiceCallBtn">📞 Llamar</button>
-      <button id="videoCallBtn">🎥 Videollamada</button>
-    `;
-    chatSection.insertBefore(callButtons, messages);
-
-    document.getElementById("voiceCallBtn").addEventListener("click", () => startCall(false));
-    document.getElementById("videoCallBtn").addEventListener("click", () => startCall(true));
-  }
 });
 
 // ----------------------------
@@ -165,34 +148,43 @@ if ("Notification" in window) {
 let localStream, remoteStream, peerConnection;
 const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-const videoContainer = document.createElement("div");
-videoContainer.style.display = "none";
-videoContainer.style.position = "fixed";
-videoContainer.style.top = "0";
-videoContainer.style.left = "0";
-videoContainer.style.width = "100%";
-videoContainer.style.height = "100%";
-videoContainer.style.background = "rgba(0,0,0,0.8)";
-videoContainer.style.justifyContent = "center";
-videoContainer.style.alignItems = "center";
-videoContainer.style.flexDirection = "column";
-videoContainer.style.zIndex = "2000";
-videoContainer.innerHTML = `
-  <video id="localVideo" autoplay muted playsinline style="width: 150px; border-radius: 10px; position: absolute; top: 10px; right: 10px;"></video>
-  <video id="remoteVideo" autoplay playsinline style="width: 90%; border-radius: 12px;"></video>
-  <button id="hangUpBtn" style="margin-top: 15px; background:red; color:white; border:none; padding:10px 20px; border-radius:8px;">Colgar</button>
-`;
-document.body.appendChild(videoContainer);
+// Crear contenedor de video
+function createVideoContainer() {
+  if (document.getElementById("videoContainer")) return;
 
-const localVideo = document.getElementById("localVideo");
-const remoteVideo = document.getElementById("remoteVideo");
-const hangUpBtn = document.getElementById("hangUpBtn");
-hangUpBtn.addEventListener("click", endCall);
+  const videoContainer = document.createElement("div");
+  videoContainer.id = "videoContainer";
+  videoContainer.style.display = "none";
+  videoContainer.style.position = "fixed";
+  videoContainer.style.top = "0";
+  videoContainer.style.left = "0";
+  videoContainer.style.width = "100%";
+  videoContainer.style.height = "100%";
+  videoContainer.style.background = "rgba(0,0,0,0.8)";
+  videoContainer.style.justifyContent = "center";
+  videoContainer.style.alignItems = "center";
+  videoContainer.style.flexDirection = "column";
+  videoContainer.style.zIndex = "2000";
+  videoContainer.innerHTML = `
+    <video id="localVideo" autoplay muted playsinline style="width: 150px; border-radius: 10px; position: absolute; top: 10px; right: 10px;"></video>
+    <video id="remoteVideo" autoplay playsinline style="width: 90%; border-radius: 12px;"></video>
+    <button id="hangUpBtn" style="margin-top: 15px; background:red; color:white; border:none; padding:10px 20px; border-radius:8px;">Colgar</button>
+  `;
+  document.body.appendChild(videoContainer);
 
+  document.getElementById("hangUpBtn").addEventListener("click", endCall);
+}
+
+// Iniciar llamada
 async function startCall(withVideo) {
   try {
+    createVideoContainer();
+    const videoContainer = document.getElementById("videoContainer");
     videoContainer.style.display = "flex";
+
     localStream = await navigator.mediaDevices.getUserMedia({ video: withVideo, audio: true });
+    const localVideo = document.getElementById("localVideo");
+    const remoteVideo = document.getElementById("remoteVideo");
     localVideo.srcObject = localStream;
 
     peerConnection = new RTCPeerConnection(config);
@@ -211,19 +203,23 @@ async function startCall(withVideo) {
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
     socket.emit("offer", { room, offer });
-
   } catch (err) {
     console.error("Error al iniciar llamada:", err);
     alert("No se pudo acceder a la cámara o micrófono 😢");
   }
 }
 
+// Señalización WebRTC
 socket.on("offer", async (data) => {
   try {
+    createVideoContainer();
+    const videoContainer = document.getElementById("videoContainer");
     videoContainer.style.display = "flex";
-    peerConnection = new RTCPeerConnection(config);
 
+    peerConnection = new RTCPeerConnection(config);
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    const localVideo = document.getElementById("localVideo");
+    const remoteVideo = document.getElementById("remoteVideo");
     localVideo.srcObject = localStream;
     localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
@@ -241,7 +237,6 @@ socket.on("offer", async (data) => {
     const answer = await peerConnection.createAnswer();
     await peerConnection.setLocalDescription(answer);
     socket.emit("answer", { room, answer });
-
   } catch (err) {
     console.error("Error al recibir la oferta:", err);
   }
@@ -263,26 +258,10 @@ socket.on("candidate", async (data) => {
 });
 
 function endCall() {
+  const videoContainer = document.getElementById("videoContainer");
   videoContainer.style.display = "none";
   if (peerConnection) peerConnection.close();
   peerConnection = null;
   localStream?.getTracks().forEach(track => track.stop());
   remoteStream = null;
-}
-function createCallButtons() {
-  if (document.getElementById("voiceCallBtn")) return; // evitar duplicados
-
-  const callButtons = document.createElement("div");
-  callButtons.style.display = "flex";
-  callButtons.style.justifyContent = "center";
-  callButtons.style.gap = "10px";
-  callButtons.style.margin = "10px 0";
-  callButtons.innerHTML = `
-    <button id="voiceCallBtn">📞 Llamar</button>
-    <button id="videoCallBtn">🎥 Videollamada</button>
-  `;
-  chatSection.insertBefore(callButtons, messages);
-
-  document.getElementById("voiceCallBtn").addEventListener("click", () => startCall(false));
-  document.getElementById("videoCallBtn").addEventListener("click", () => startCall(true));
 }

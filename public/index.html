@@ -10,39 +10,59 @@
 </head>
 <body>
   <div class="chat-container">
-    <div class="header">
-      <h2>💞 Chat de Amor 💞</h2>
-    </div>
 
-    <div class="join-section" id="joinSection">
+    <!-- Cabecera -->
+    <header class="header">
+      <h2>💞 Chat de Amor 💞</h2>
+    </header>
+
+    <!-- Sección de unirse a la sala -->
+    <section class="join-section" id="joinSection">
       <input id="room" type="text" placeholder="Código de sala (ej: amor123)" />
       <input id="password" type="password" placeholder="Contraseña 💫" />
       <input id="name" type="text" placeholder="Tu nombre" />
       <input id="email" type="email" placeholder="Tu correo" />
       <button id="joinBtn">Entrar</button>
-    </div>
+    </section>
 
-    <div class="chat-section hidden" id="chatSection">
+    <!-- Sección del chat -->
+    <section class="chat-section hidden" id="chatSection">
+
+      <!-- Mensajes -->
       <div class="messages" id="messages"></div>
       <div id="typing"></div>
 
+      <!-- Área de input y botones -->
       <form id="form" class="input-area" autocomplete="off">
         <input id="text" type="text" placeholder="Escribe un mensaje..." />
+
         <div class="boton">
-        <div class="video-container hidden" id="videoContainer">
-          <video id="localVideo" autoplay muted></video>
-          <video id="remoteVideo" autoplay></video>
-        </div>
-        <button type="submit" id="sendBtn">Enviar 💌</button>
-        <button type="button" id="exitBtn" class="exit">Salir 🚪</button>
+          <button type="submit" id="sendBtn">Enviar 💌</button>
+          <button type="button" id="exitBtn" class="exit">Salir 🚪</button>
         </div>
       </form>
-    </div>
+
+      <!-- Botones de llamada (puedes personalizar con CSS) -->
+      <div class="call-buttons">
+        <button onclick="startCall(false)">📞 Llamar</button>
+        <button onclick="startCall(true)">🎥 Videollamada</button>
+      </div>
+
+      <!-- Contenedor de video (invisible hasta iniciar llamada) -->
+      <div class="video-container hidden" id="videoContainer">
+        <video id="localVideo" autoplay muted></video>
+        <video id="remoteVideo" autoplay></video>
+      </div>
+
+    </section>
   </div>
 
+  <!-- Sonido de notificación -->
   <audio id="notifySound" src="whatsapp-message-sound-effect-1-386093.mp3"></audio>
 
+  <!-- Scripts -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
+
