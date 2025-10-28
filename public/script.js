@@ -269,3 +269,20 @@ function endCall() {
   localStream?.getTracks().forEach(track => track.stop());
   remoteStream = null;
 }
+function createCallButtons() {
+  if (document.getElementById("voiceCallBtn")) return; // evitar duplicados
+
+  const callButtons = document.createElement("div");
+  callButtons.style.display = "flex";
+  callButtons.style.justifyContent = "center";
+  callButtons.style.gap = "10px";
+  callButtons.style.margin = "10px 0";
+  callButtons.innerHTML = `
+    <button id="voiceCallBtn">📞 Llamar</button>
+    <button id="videoCallBtn">🎥 Videollamada</button>
+  `;
+  chatSection.insertBefore(callButtons, messages);
+
+  document.getElementById("voiceCallBtn").addEventListener("click", () => startCall(false));
+  document.getElementById("videoCallBtn").addEventListener("click", () => startCall(true));
+}
