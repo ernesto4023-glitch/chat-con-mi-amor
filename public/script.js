@@ -14,8 +14,17 @@ const messageInput = document.getElementById("text");
 const form = document.getElementById("form");
 const notifySound = document.getElementById("notifySound");
 
+const voiceCallBtn = document.getElementById("voiceCallBtn");
+const videoCallBtn = document.getElementById("videoCallBtn");
+const hangUpBtn = document.getElementById("hangUpBtn");
+const videoContainer = document.getElementById("videoContainer");
+const localVideo = document.getElementById("localVideo");
+const remoteVideo = document.getElementById("remoteVideo");
+
 let room, name, email;
 let typingTimeout;
+let localStream, remoteStream, peerConnection;
+const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
 // ----------------------------
 // 🔁 Restaurar sesión si existe
@@ -25,6 +34,8 @@ if (saved) {
   const data = JSON.parse(saved);
   ({ room, name, email } = data);
   socket.emit("join", data);
+  joinSection.classList.add("hidden");
+  chatSection.classList.remove("hidden");
 }
 
 // ----------------------------
@@ -55,14 +66,15 @@ joinBtn.addEventListener("click", () => {
   const data = { room, password, name, email };
   sessionStorage.setItem("chatData", JSON.stringify(data));
   socket.emit("join", data);
+
+  joinSection.classList.add("hidden");
+  chatSection.classList.remove("hidden");
 });
 
 // ----------------------------
 // 💬 Recibir historial y mostrar chat
 // ----------------------------
 socket.on("history", (history) => {
-  joinSection.classList.add("hidden");
-  chatSection.classList.remove("hidden");
   messages.innerHTML = "";
   history.forEach(appendMessage);
 });
@@ -75,7 +87,6 @@ socket.on("chat message", (msg) => {
 
   if (msg.email !== email) {
     notifySound.play();
-
     if (Notification.permission === "granted") {
       const notification = new Notification(`💌 Nuevo mensaje de ${msg.name}`, {
         body: msg.text,
@@ -99,6 +110,9 @@ socket.on("system", ({ text }) => {
 socket.on("typing", (who) => (typingEl.textContent = `${who} está escribiendo...`));
 socket.on("stop typing", () => (typingEl.textContent = ""));
 
+// ----------------------------
+// 💬 Enviar mensajes
+// ----------------------------
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   const text = messageInput.value.trim();
@@ -114,6 +128,9 @@ messageInput.addEventListener("input", () => {
   typingTimeout = setTimeout(() => socket.emit("stop typing", room), 1000);
 });
 
+// ----------------------------
+// Función para mostrar mensaje
+// ----------------------------
 function appendMessage(msg) {
   const div = document.createElement("div");
   div.classList.add("message");
@@ -133,58 +150,20 @@ if ("serviceWorker" in navigator) {
 }
 
 if ("Notification" in window) {
-  Notification.requestPermission().then(permission => {
-    if (permission === "granted") {
-      console.log("🔔 Permiso de notificaciones concedido");
-    } else {
-      console.warn("🚫 Notificaciones bloqueadas");
-    }
-  });
+  Notification.requestPermission();
 }
 
 // ----------------------------
 // 📞 Llamadas y videollamadas con WebRTC
 // ----------------------------
-let localStream, remoteStream, peerConnection;
-const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+voiceCallBtn.addEventListener("click", () => startCall(false));
+videoCallBtn.addEventListener("click", () => startCall(true));
+hangUpBtn.addEventListener("click", endCall);
 
-// Crear contenedor de video
-function createVideoContainer() {
-  if (document.getElementById("videoContainer")) return;
-
-  const videoContainer = document.createElement("div");
-  videoContainer.id = "videoContainer";
-  videoContainer.style.display = "none";
-  videoContainer.style.position = "fixed";
-  videoContainer.style.top = "0";
-  videoContainer.style.left = "0";
-  videoContainer.style.width = "100%";
-  videoContainer.style.height = "100%";
-  videoContainer.style.background = "rgba(0,0,0,0.8)";
-  videoContainer.style.justifyContent = "center";
-  videoContainer.style.alignItems = "center";
-  videoContainer.style.flexDirection = "column";
-  videoContainer.style.zIndex = "2000";
-  videoContainer.innerHTML = `
-    <video id="localVideo" autoplay muted playsinline style="width: 150px; border-radius: 10px; position: absolute; top: 10px; right: 10px;"></video>
-    <video id="remoteVideo" autoplay playsinline style="width: 90%; border-radius: 12px;"></video>
-    <button id="hangUpBtn" style="margin-top: 15px; background:red; color:white; border:none; padding:10px 20px; border-radius:8px;">Colgar</button>
-  `;
-  document.body.appendChild(videoContainer);
-
-  document.getElementById("hangUpBtn").addEventListener("click", endCall);
-}
-
-// Iniciar llamada
 async function startCall(withVideo) {
   try {
-    createVideoContainer();
-    const videoContainer = document.getElementById("videoContainer");
-    videoContainer.style.display = "flex";
-
+    videoContainer.classList.remove("hidden");
     localStream = await navigator.mediaDevices.getUserMedia({ video: withVideo, audio: true });
-    const localVideo = document.getElementById("localVideo");
-    const remoteVideo = document.getElementById("remoteVideo");
     localVideo.srcObject = localStream;
 
     peerConnection = new RTCPeerConnection(config);
@@ -203,6 +182,7 @@ async function startCall(withVideo) {
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
     socket.emit("offer", { room, offer });
+
   } catch (err) {
     console.error("Error al iniciar llamada:", err);
     alert("No se pudo acceder a la cámara o micrófono 😢");
@@ -212,14 +192,10 @@ async function startCall(withVideo) {
 // Señalización WebRTC
 socket.on("offer", async (data) => {
   try {
-    createVideoContainer();
-    const videoContainer = document.getElementById("videoContainer");
-    videoContainer.style.display = "flex";
+    videoContainer.classList.remove("hidden");
 
     peerConnection = new RTCPeerConnection(config);
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    const localVideo = document.getElementById("localVideo");
-    const remoteVideo = document.getElementById("remoteVideo");
     localVideo.srcObject = localStream;
     localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
@@ -237,6 +213,7 @@ socket.on("offer", async (data) => {
     const answer = await peerConnection.createAnswer();
     await peerConnection.setLocalDescription(answer);
     socket.emit("answer", { room, answer });
+
   } catch (err) {
     console.error("Error al recibir la oferta:", err);
   }
@@ -249,17 +226,12 @@ socket.on("answer", async (data) => {
 
 socket.on("candidate", async (data) => {
   if (peerConnection && data.candidate) {
-    try {
-      await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-    } catch (err) {
-      console.error("Error al agregar candidato ICE:", err);
-    }
+    await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
   }
 });
 
 function endCall() {
-  const videoContainer = document.getElementById("videoContainer");
-  videoContainer.style.display = "none";
+  videoContainer.classList.add("hidden");
   if (peerConnection) peerConnection.close();
   peerConnection = null;
   localStream?.getTracks().forEach(track => track.stop());

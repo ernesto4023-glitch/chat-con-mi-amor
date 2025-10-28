@@ -32,23 +32,22 @@
       <div class="messages" id="messages"></div>
       <div id="typing"></div>
 
-      <!-- Área de input y botones -->
+      <!-- Área de input -->
       <form id="form" class="input-area" autocomplete="off">
         <input id="text" type="text" placeholder="Escribe un mensaje..." />
-
         <div class="boton">
           <button type="submit" id="sendBtn">Enviar 💌</button>
           <button type="button" id="exitBtn" class="exit">Salir 🚪</button>
         </div>
       </form>
 
-      <!-- Botones de llamada (puedes personalizar con CSS) -->
+      <!-- Botones de llamada (siempre visibles en HTML) -->
       <div class="call-buttons">
-        <button onclick="startCall(false)">📞 Llamar</button>
-        <button onclick="startCall(true)">🎥 Videollamada</button>
+        <button id="voiceCallBtn">📞 Llamar</button>
+        <button id="videoCallBtn">🎥 Videollamada</button>
       </div>
 
-      <!-- Contenedor de video (invisible hasta iniciar llamada) -->
+      <!-- Contenedor de video -->
       <div class="video-container hidden" id="videoContainer">
         <video id="localVideo" autoplay muted></video>
         <video id="remoteVideo" autoplay></video>
@@ -65,4 +64,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-
