@@ -29,6 +29,12 @@
       <form id="form" class="input-area" autocomplete="off">
         <input id="text" type="text" placeholder="Escribe un mensaje..." />
         <div class="boton">
+        <button type="button" id="callBtn">📞 Llamar</button>
+        <button type="button" id="videoCallBtn">🎥 Videollamada</button>
+        <div class="video-container hidden" id="videoContainer">
+          <video id="localVideo" autoplay muted></video>
+          <video id="remoteVideo" autoplay></video>
+        </div>
         <button type="submit" id="sendBtn">Enviar 💌</button>
         <button type="button" id="exitBtn" class="exit">Salir 🚪</button>
         </div>

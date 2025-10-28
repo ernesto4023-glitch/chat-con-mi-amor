@@ -94,6 +94,20 @@ io.on("connection", (socket) => {
     io.to(room).emit("chat message", msg);
   });
 
+    // 📞 --- Señalización WebRTC para llamadas ---
+  socket.on("offer", (data) => {
+    socket.to(data.room).emit("offer", data);
+  });
+
+  socket.on("answer", (data) => {
+    socket.to(data.room).emit("answer", data);
+  });
+
+  socket.on("candidate", (data) => {
+    socket.to(data.room).emit("candidate", data);
+  });
+
+
   socket.on("disconnect", () => {
     if (socket.data?.room && socket.data?.name) {
       io.to(socket.data.room).emit("system", {
